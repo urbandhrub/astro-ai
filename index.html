@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Astro AI</title>
+</head>
+<body>
+
+<h2>Astro AI (Free)</h2>
+
+<input id="input" placeholder="Enter DOB or question">
+<button onclick="askAI()">Ask</button>
+
+<p id="output"></p>
+
+<script>
+async function askAI() {
+  const msg = document.getElementById("input").value;
+
+  const res = await fetch("/api/ai", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ message: msg })
+  });
+
+  const data = await res.json();
+  document.getElementById("output").innerText = data.reply;
+}
+</script>
+
+</body>
+</html>
