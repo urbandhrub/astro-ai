@@ -1,31 +1,149 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
-  <title>Astro AI</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PanjikaAI - বাংলার পঞ্জিকা + AI পণ্ডিত জী</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; }
+    .chat-scroll { max-height: 420px; overflow-y: auto; }
+  </style>
 </head>
-<body>
+<body class="bg-[#0a0a2e] text-white min-h-screen">
 
-<h2>Astro AI (Free)</h2>
+  <div class="max-w-5xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-10 border-b border-yellow-500/30 pb-6">
+      <div class="flex items-center gap-4">
+        <span class="text-5xl">🪔</span>
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-yellow-300 to-amber-400 bg-clip-text text-transparent">PanjikaAI</h1>
+      </div>
+      <p class="text-yellow-400 text-lg">বাংলার পঞ্জিকা + AI পণ্ডিত জী</p>
+    </div>
 
-<input id="input" placeholder="Enter DOB or question">
-<button onclick="askAI()">Ask</button>
+    <div class="grid md:grid-cols-2 gap-8">
+      <!-- LEFT: KUNDLI -->
+      <div>
+        <div class="bg-white/5 border border-yellow-500/30 rounded-3xl p-8">
+          <h2 class="text-2xl mb-6 text-yellow-300">🪐 আপনার কুণ্ডলী তৈরি করুন</h2>
+          
+          <input id="name" type="text" placeholder="আপনার নাম" class="w-full mb-4 p-4 bg-white/10 border border-yellow-500/30 rounded-2xl focus:outline-none">
+          <div class="grid grid-cols-2 gap-4">
+            <input id="dob" type="date" class="p-4 bg-white/10 border border-yellow-500/30 rounded-2xl">
+            <input id="time" type="time" class="p-4 bg-white/10 border border-yellow-500/30 rounded-2xl">
+          </div>
+          <input id="place" type="text" value="Kolkata, India" class="w-full mt-4 p-4 bg-white/10 border border-yellow-500/30 rounded-2xl">
 
-<p id="output"></p>
+          <button onclick="generateKundli()" class="mt-8 w-full py-5 bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-bold text-xl rounded-3xl">
+            কুণ্ডলী তৈরি করুন (Free)
+          </button>
+        </div>
 
-<script>
-async function askAI() {
-  const msg = document.getElementById("input").value;
+        <!-- Kundli Chart -->
+        <div id="kundliChart" class="hidden mt-8 bg-white/5 border border-yellow-500/30 rounded-3xl p-8 text-center">
+          <h3 class="text-yellow-300 mb-4">আপনার কুণ্ডলী</h3>
+          <div class="mx-auto w-64 h-64 border-8 border-yellow-400 rounded-2xl flex items-center justify-center bg-[#0f0a1f] relative">
+            <svg width="220" height="220" viewBox="0 0 220 220">
+              <rect x="10" y="10" width="200" height="200" fill="none" stroke="#facc15" stroke-width="16"/>
+              <line x1="110" y1="10" x2="110" y2="210" stroke="#facc15" stroke-width="8"/>
+              <line x1="10" y1="110" x2="210" y2="110" stroke="#facc15" stroke-width="8"/>
+              <circle cx="110" cy="110" r="40" fill="none" stroke="#facc15" stroke-width="8"/>
+              <text x="75" y="80" font-size="28" fill="#fff">☉</text>
+              <text x="145" y="80" font-size="28" fill="#fff">☽</text>
+              <text x="75" y="165" font-size="28" fill="#fff">♃</text>
+            </svg>
+          </div>
+        </div>
+      </div>
 
-  const res = await fetch("/api/ai", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ message: msg })
-  });
+      <!-- RIGHT: CHAT -->
+      <div class="bg-white/5 border border-yellow-500/30 rounded-3xl p-8 flex flex-col h-[620px]">
+        <h2 class="text-2xl mb-4 text-yellow-300">Talk to AI Pandit Ji</h2>
+        
+        <div id="chatBox" class="chat-scroll flex-1 bg-black/30 rounded-2xl p-4 mb-4 space-y-4 overflow-y-auto"></div>
+        
+        <div class="flex gap-3">
+          <input id="chatInput" type="text" placeholder="আপনার প্রশ্ন লিখুন..." 
+                 class="flex-1 bg-white/10 border border-yellow-500/30 rounded-2xl px-5 py-4 focus:outline-none">
+          <button onclick="sendMessage()" 
+                  class="bg-yellow-400 text-black px-8 rounded-2xl font-semibold">পাঠান</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  const data = await res.json();
-  document.getElementById("output").innerText = data.reply;
-}
-</script>
+  <!-- Floating Voice Button -->
+  <button onclick="openVoice()" 
+          class="fixed bottom-8 right-8 w-20 h-20 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center text-5xl shadow-2xl z-50 hover:scale-110 transition-all border-4 border-white/30">
+    🪔
+  </button>
 
+  <!-- Voice Modal -->
+  <div id="voiceModal" class="hidden fixed inset-0 bg-black/95 z-[100] flex items-center justify-center">
+    <div class="w-full max-w-lg bg-[#0a0a2e] border border-yellow-400 rounded-3xl overflow-hidden">
+      <div class="p-4 border-b border-yellow-400 flex justify-between items-center">
+        <h3 class="text-yellow-300 font-semibold">Voice AI Pandit Ji (Free)</h3>
+        <button onclick="closeVoice()" class="text-3xl text-yellow-300">✕</button>
+      </div>
+      <iframe id="voiceFrame" width="100%" height="720" allow="microphone" class="border-0"></iframe>
+    </div>
+  </div>
+
+  <script>
+    let birthDetails = "";
+
+    function generateKundli() {
+      const name = document.getElementById("name").value || "বন্ধু";
+      const dob = document.getElementById("dob").value;
+      birthDetails = `${name}, DOB: ${dob}`;
+      
+      document.getElementById("kundliChart").classList.remove("hidden");
+      addMessage("assistant", `নমস্কার ${name}। আপনার কুণ্ডলী তৈরি হয়েছে। এখন প্রশ্ন করুন।`);
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("chatInput");
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      addMessage("user", msg);
+      input.value = "";
+
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg, birthDetails: birthDetails })
+      });
+
+      const data = await response.json();
+      addMessage("assistant", data.reply || "আবার চেষ্টা করুন।");
+    }
+
+    function addMessage(role, text) {
+      const box = document.getElementById("chatBox");
+      const div = document.createElement("div");
+      div.className = role === "user" ? "text-right" : "text-left";
+      div.innerHTML = `<div class="inline-block max-w-[85%] px-5 py-3 rounded-3xl ${role === "user" ? "bg-yellow-400 text-black" : "bg-white/10"}">${text}</div>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function openVoice() {
+      document.getElementById("voiceFrame").src = "https://huggingface.co/spaces/Dhruboj/panjikaai";
+      document.getElementById("voiceModal").classList.remove("hidden");
+    }
+
+    function closeVoice() {
+      document.getElementById("voiceModal").classList.add("hidden");
+      document.getElementById("voiceFrame").src = "";
+    }
+
+    // Allow Enter key in chat
+    document.getElementById("chatInput").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
 </body>
 </html>
